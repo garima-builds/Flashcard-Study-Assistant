@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard Study Assistant</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #111827, #312e81);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 25px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 850px;
+            background: white;
+            border-radius: 24px;
+            padding: 35px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header .icon {
+            font-size: 45px;
+        }
+
+        .header h1 {
+            color: #312e81;
+            font-size: 34px;
+            margin: 8px 0;
+        }
+
+        .header p {
+            color: #6b7280;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            color: #4b5563;
+            font-weight: bold;
+        }
+
+        .progress {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 25px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: #6366f1;
+            transition: width 0.3s ease;
+        }
+
+        .card {
+            min-height: 300px;
+            background: linear-gradient(135deg, #eef2ff, #f5f3ff);
+            border: 2px solid #c7d2fe;
+            border-radius: 20px;
+            padding: 35px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .card-label {
+            color: #6366f1;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 18px;
+        }
+
+        .card h2 {
+            color: #1f2937;
+            font-size: 28px;
+            line-height: 1.4;
+        }
+
+        .answer {
+            display: none;
+            margin-top: 25px;
+            padding: 18px;
+            background: white;
+            border-radius: 12px;
+            color: #374151;
+            line-height: 1.6;
+            width: 100%;
+        }
+
+        .show-answer {
+            margin-top: 22px;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            background: #6366f1;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .show-answer:hover {
+            background: #4f46e5;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-top: 22px;
+        }
+
+        .controls button {
+            flex: 1;
+            padding: 13px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .previous {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .next {
+            background: #312e81;
+            color: white;
+        }
+
+        .previous:hover {
+            background: #d1d5db;
+        }
+
+        .next:hover {
+            background: #1e1b4b;
+        }
+
+        .score-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .score-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .correct {
+            background: #16a34a;
+        }
+
+        .wrong {
+            background: #dc2626;
+        }
+
+        .shuffle {
+            width: 100%;
+            margin-top: 15px;
+            padding: 12px;
+            border: 1px solid #c7d2fe;
+            border-radius: 10px;
+            background: white;
+            color: #4338ca;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .shuffle:hover {
+            background: #eef2ff;
+        }
+
+        #finalScore {
+            display: none;
+            text-align: center;
+            background: #eef2ff;
+            padding: 35px;
+            border-radius: 18px;
+        }
+
+        #finalScore h2 {
+            color: #312e81;
+            font-size: 30px;
+            margin-bottom: 12px;
+        }
+
+        #finalScore p {
+            color: #4b5563;
+            margin-bottom: 20px;
+        }
+
+        .restart {
+            padding: 13px 30px;
+            border: none;
+            border-radius: 10px;
+            background: #312e81;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 22px;
+            }
+
+            .header h1 {
+                font-size: 27px;
+            }
+
+            .card h2 {
+                font-size: 23px;
+            }
+
+            .controls,
+            .score-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <div class="icon">🧠</div>
+        <h1>Flashcard Study Assistant</h1>
+        <p>Learn, test yourself and track your progress.</p>
+    </div>
+
+    <div id="studyArea">
+
+        <div class="top-bar">
+            <span id="cardNumber">Card 1 of 8</span>
+            <span id="scoreDisplay">Score: 0</span>
+        </div>
+
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="card">
+
+            <div class="card-label">Question</div>
+
+            <h2 id="question"></h2>
+
+            <div class="answer" id="answer"></div>
+
+            <button class="show-answer" onclick="showAnswer()">
+                👁️ Show Answer
+            </button>
+
+        </div>
+
+        <div class="score-buttons">
+            <button class="wrong" onclick="markAnswer(false)">
+                ❌ I Don't Know
+            </button>
+
+            <button class="correct" onclick="markAnswer(true)">
+                ✅ I Know It
+            </button>
+        </div>
+
+        <div class="controls">
+            <button class="previous" onclick="previousCard()">
+                ← Previous
+            </button>
+
+            <button class="next" onclick="nextCard()">
+                Next →
+            </button>
+        </div>
+
+        <button class="shuffle" onclick="shuffleCards()">
+            🔀 Shuffle Flashcards
+        </button>
+
+    </div>
+
+    <div id="finalScore">
+
+        <h2>🎉 Study Session Complete!</h2>
+
+        <p id="finalMessage"></p>
+
+        <button class="restart" onclick="restartQuiz()">
+            🔄 Study Again
+        </button>
+
+    </div>
+
+</div>
+
+<script>
+
+const flashcards = [
+    {
+        question: "What is Artificial Intelligence?",
+        answer: "Artificial Intelligence is the ability of a computer or machine to perform tasks that normally require human intelligence."
+    },
+    {
+        question: "What is Machine Learning?",
+        answer: "Machine Learning is a branch of AI where computers learn patterns from data and use them to make predictions or decisions."
+    },
+    {
+        question: "What is a programming algorithm?",
+        answer: "An algorithm is a step-by-step procedure used to solve a problem or perform a task."
+    },
+    {
+        question: "What is a variable in programming?",
+        answer: "A variable is a named storage location used to hold a value that can change during program execution."
+    },
+    {
+        question: "What is a database?",
+        answer: "A database is an organized collection of data that can be stored, accessed, managed and updated efficiently."
+    },
+    {
+        question: "What is HTML?",
+        answer: "HTML stands for HyperText Markup Language and is used to structure content on web pages."
+    },
+    {
+        question: "What is JavaScript?",
+        answer: "JavaScript is a programming language commonly used to add interactivity and dynamic behavior to websites."
+    },
+    {
+        question: "What is GitHub?",
+        answer: "GitHub is a platform used to store, manage, collaborate on and share software projects using Git."
+    }
+];
+
+let currentCard = 0;
+let score = 0;
+let answeredCards = new Set();
+
+function displayCard() {
+
+    const card = flashcards[currentCard];
+
+    document.getElementById("question").textContent =
+        card.question;
+
+    document.getElementById("answer").textContent =
+        card.answer;
+
+    document.getElementById("answer").style.display = "none";
+
+    document.querySelector(".show-answer").style.display =
+        "inline-block";
+
+    document.getElementById("cardNumber").textContent =
+        "Card " + (currentCard + 1) + " of " + flashcards.length;
+
+    document.getElementById("scoreDisplay").textContent =
+        "Score: " + score;
+
+    const progress =
+        ((currentCard + 1) / flashcards.length) * 100;
+
+    document.getElementById("progressBar").style.width =
+        progress + "%";
+}
+
+function showAnswer() {
+
+    document.getElementById("answer").style.display =
+        "block";
+
+    document.querySelector(".show-answer").style.display =
+        "none";
+}
+
+function markAnswer(isCorrect) {
+
+    if (answeredCards.has(currentCard)) {
+        return;
+    }
+
+    answeredCards.add(currentCard);
+
+    if (isCorrect) {
+        score++;
+    }
+
+    document.getElementById("scoreDisplay").textContent =
+        "Score: " + score;
+
+    if (answeredCards.size === flashcards.length) {
+        setTimeout(showFinalScore, 300);
+    } else {
+        nextCard();
+    }
+}
+
+function nextCard() {
+
+    if (currentCard < flashcards.length - 1) {
+        currentCard++;
+        displayCard();
+    }
+}
+
+function previousCard() {
+
+    if (currentCard > 0) {
+        currentCard--;
+        displayCard();
+    }
+}
+
+function shuffleCards() {
+
+    for (let i = flashcards.length - 1; i > 0; i--) {
+
+        let j = Math.floor(Math.random() * (i + 1));
+
+        [flashcards[i], flashcards[j]] =
+            [flashcards[j], flashcards[i]];
+    }
+
+    currentCard = 0;
+    score = 0;
+    answeredCards.clear();
+
+    displayCard();
+}
+
+function showFinalScore() {
+
+    document.getElementById("studyArea").style.display =
+        "none";
+
+    document.getElementById("finalScore").style.display =
+        "block";
+
+    let percentage =
+        Math.round((score / flashcards.length) * 100);
+
+    let message;
+
+    if (percentage >= 80) {
+        message = "Excellent! You have a strong understanding of these topics. Your score is " + percentage + "%.";
+    } else if (percentage >= 50) {
+        message = "Good effort! Review the questions you missed and try again. Your score is " + percentage + "%.";
+    } else {
+        message = "Keep practicing! Revising these concepts again will help improve your score. Your score is " + percentage + "%.";
+    }
+
+    document.getElementById("finalMessage").textContent =
+        "You answered " + score + " out of " +
+        flashcards.length + " correctly. " + message;
+}
+
+function restartQuiz() {
+
+    currentCard = 0;
+    score = 0;
+    answeredCards.clear();
+
+    document.getElementById("studyArea").style.display =
+        "block";
+
+    document.getElementById("finalScore").style.display =
+        "none";
+
+    displayCard();
+}
+
+displayCard();
+
+</script>
+
+</body>
+</html>
